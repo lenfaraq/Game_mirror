@@ -4,9 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches: [ main, master ]
-    paths:
-      - 'ios-sender/**'
-      - '.github/workflows/ios-sideload-build.yml'
 
 jobs:
   build-unsigned-ipa:
@@ -23,7 +20,7 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      - name: Generate Xcode Project from project.yml (2 App IDs: Main App + BroadcastExtension)
+      - name: "Generate Xcode Project from project.yml (2 App IDs - Main App + BroadcastExtension)"
         run: xcodegen generate
 
       - name: Build Unsigned Release App Bundle
