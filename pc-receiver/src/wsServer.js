@@ -25,7 +25,13 @@ class WebSocketConnection extends EventEmitter {
       }
     });
     this.socket.on('error', (err) => {
-      this.emit('error', err);
+      if (this.listenerCount('error') > 0) {
+        this.emit('error', err);
+      }
+      if (this.readyState !== 3) {
+        this.readyState = 3;
+        this.emit('close');
+      }
     });
   }
 
@@ -158,7 +164,12 @@ class WebSocketConnection extends EventEmitter {
     }
 
     try {
-      this.socket.write(Buffer.concat([header, payloadBuffer]));
+      this.socket.write(Buffer.concat([header, payloadBuffer]), (err) => {
+        if (err && this.readyState !== 3) {
+          this.readyState = 3;
+          this.emit('close');
+        }
+      });
       return true;
     } catch {
       return false;
