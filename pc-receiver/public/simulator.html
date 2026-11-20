@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireless Game Mirror — Mobile Sender Simulator (iOS / Android)</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">SIMULATOR</span>
+      <div>
+        <h1>ตัวจำลองมือถือ (iOS / Android WebRTC Sender Simulator)</h1>
+        <div class="brand-sub">ทดสอบการส่งภาพเกม 60fps + เสียงเกม + หมุนจอแนวตั้ง/แนวนอน + mDNS Allow/Deny เข้า PC &amp; OBS</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <span id="sim-status-pill" class="pill waiting">● ยังไม่ได้เชื่อมต่อ</span>
+    </div>
+  </header>
+
+  <main class="layout-grid">
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">🎮 หน้าจอเกมจำลอง (Canvas 60FPS + WebAudio 48kHz)</div>
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-rotate" class="btn btn-primary">🔄 หมุนจอ (แนวตั้ง ↔ แนวนอน)</button>
+          <button id="btn-toggle-audio-block" class="btn">🔊 จำลองเกมบล็อกเสียง (Android)</button>
+        </div>
+      </div>
+
+      <div class="preview-viewport" style="height: 460px;">
+        <canvas id="sim-canvas" width="1280" height="720" style="max-width: 96%; max-height: 96%; border-radius: 8px; border: 1px solid #38bdf8;"></canvas>
+      </div>
+    </section>
+
+    <aside class="card" style="display: flex; flex-direction: column; gap: 14px;">
+      <div class="card-title">📡 ตั้งค่าการเชื่อมต่อเข้า PC Receiver</div>
+
+      <div class="control-group">
+        <div class="control-label"><span>ชื่ออุปกรณ์ (Device Name)</span></div>
+        <input id="input-device-name" type="text" value="iPhone 16 Pro (ReplayKit)" />
+      </div>
+
+      <div class="control-group">
+        <div class="control-label"><span>แพลตฟอร์ม (Platform)</span></div>
+        <select id="select-platform">
+          <option value="ios">iOS (ReplayKit Split-Process + VideoToolbox)</option>
+          <option value="android">Android (MediaProjection + AudioPlaybackCapture)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label"><span>รูปแบบการยืนยันตัวตน (Pairing Method)</span></div>
+        <select id="select-auth-mode">
+          <option value="qr">สแกน QR Code (ใช้ Session Token อัตโนมัติ)</option>
+          <option value="mdns">ค้นหาผ่าน mDNS (ต้องกด Allow/Deny บนหน้าจอ PC)</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button id="btn-start-stream" class="btn btn-success" style="flex: 1; padding: 12px;">▶ เริ่มสตรีมเข้า PC &amp; OBS</button>
+        <button id="btn-stop-stream" class="btn btn-danger" style="padding: 12px;" disabled>■ หยุด</button>
+      </div>
+
+      <button id="btn-open-native-app" class="btn btn-primary" style="padding: 10px; width: 100%;">📲 เปิดในแอป Native iOS / Android (gamemirror://)</button>
+
+      <div id="sim-log" style="background: #090d16; border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px; font-family: monospace; font-size: 12px; height: 190px; overflow-y: auto; color: #94a3b8;"></div>
+    </aside>
+  </main>
+
+  <script src="/simulator.js"></script>
+</body>
+</html>

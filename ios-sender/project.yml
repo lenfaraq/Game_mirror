@@ -1,0 +1,53 @@
+name: WirelessGameMirror
+options:
+  bundleIdPrefix: com.wirelessgamemirror
+  deploymentTarget:
+    iOS: "15.0"
+  xcodeVersion: "15.0"
+
+packages:
+  WebRTC:
+    url: https://github.com/stasel/WebRTC.git
+    from: 125.0.0
+
+targets:
+  # Target 1 of 2 (Free Apple ID allows up to 3 App IDs/week; Main App + Extension uses 2 App IDs)
+  WirelessGameMirrorApp:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: Shared
+      - path: WirelessGameMirrorApp
+    info:
+      path: WirelessGameMirrorApp/Info.plist
+    entitlements:
+      path: WirelessGameMirrorApp/WirelessGameMirrorApp.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wirelessgamemirror.app
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1,2"
+    dependencies:
+      - target: BroadcastExtension
+        embed: true
+      - package: WebRTC
+
+  # Target 2 of 2: ReplayKit Broadcast Upload Extension (<50MB RAM Split-Process IPC)
+  BroadcastExtension:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: Shared
+      - path: BroadcastExtension
+    info:
+      path: BroadcastExtension/Info.plist
+    entitlements:
+      path: BroadcastExtension/BroadcastExtension.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wirelessgamemirror.app.BroadcastExtension
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SKIP_INSTALL: YES

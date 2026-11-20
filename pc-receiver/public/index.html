@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireless Game Mirror — PC Receiver & OBS Controller</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-badge">WGM 60FPS</span>
+      <div>
+        <h1>Wireless Game Mirror — PC Receiver</h1>
+        <div class="brand-sub">iOS (ReplayKit Split-Process) &amp; Android (MediaProjection) ➔ WebRTC LAN ➔ OBS Browser Source</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <span id="session-status-pill" class="pill waiting">● รอการเชื่อมต่อมือถือ (1 เครื่อง)</span>
+      <a href="/obs?hud=1" target="_blank" class="btn">🎥 เปิดหน้า OBS Source</a>
+      <a href="/simulator" target="_blank" class="btn">📱 เปิดตัวจำลองมือถือ (Simulator)</a>
+    </div>
+  </header>
+
+  <main class="layout-grid">
+    <!-- Left Column: Live Preview & Real-Time Telemetry -->
+    <section>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📺 ภาพตัวอย่างสตรีมสด (Live Preview)</span>
+            <span id="orientation-badge" class="pill">LANDSCAPE 1920x1080</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-toggle-audio" class="btn">🔇 เปิดฟังเสียงเกมบน PC</button>
+            <button id="btn-force-idr" class="btn">⚡ รีเฟรชเฟรมภาพ (Force Keyframe)</button>
+            <button id="btn-disconnect-device" class="btn btn-danger" style="display: none;">✖ ตัดการเชื่อมต่อมือถือ</button>
+          </div>
+        </div>
+
+        <!-- Warning Banner when an Android game blocks AudioPlaybackCapture -->
+        <div id="audio-warning-banner" class="warning-banner" role="alert">
+          <div>
+            <strong>⚠️ แจ้งเตือนระบบเสียง:</strong>
+            <span id="audio-warning-text">เกมนี้บล็อกการอัดเสียงภายใน (AudioPlaybackCapture) ระบบกำลังส่งเฉพาะภาพหน้าจอ</span>
+          </div>
+          <span class="pill waiting">Video-Only Fallback</span>
+        </div>
+
+        <div id="preview-viewport" class="preview-viewport" data-orientation="landscape" data-streaming="false">
+          <video id="preview-video" autoplay playsinline muted></video>
+          <div class="preview-placeholder">
+            <h3 style="color: #f8fafc; margin-bottom: 6px;">พร้อมรับสัญญาณภาพและเสียงเกมไร้สาย</h3>
+            <p style="font-size: 13px; max-width: 460px;">
+              สแกน QR Code ทางด้านขวาด้วยแอปบน iOS หรือ Android หรือค้นหาชื่อเครื่องผ่าน mDNS (<code>_gamestream._tcp.local</code>) ในวง Wi-Fi / USB Tethering เดียวกัน
+            </p>
+          </div>
+        </div>
+
+        <!-- Real-Time Telemetry Cards -->
+        <div class="telemetry-grid">
+          <div class="stat-box">
+            <div class="stat-label">เฟรมเรต (FPS)</div>
+            <div id="stat-fps" class="stat-value">0 fps</div>
+            <div id="stat-resolution" class="stat-sub">เป้าหมาย: 1080p60</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">บิตเรต (Bitrate)</div>
+            <div id="stat-bitrate" class="stat-value">0.0 Mbps</div>
+            <div id="stat-encoder" class="stat-sub">Hardware H.264 (Zero B-Frames)</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">ความหน่วง / สูญเสีย</div>
+            <div id="stat-latency" class="stat-value">-- ms</div>
+            <div id="stat-loss" class="stat-sub">Packet Loss: 0.0%</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">สถานะเครื่องมือถือ</div>
+            <div id="stat-battery" class="stat-value">--%</div>
+            <div id="stat-thermal" class="stat-sub">อุณหภูมิ: --°C | RAM: -- MB</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: QR Pairing, OBS Setup & Stream Controls -->
+    <aside style="display: flex; flex-direction: column; gap: 18px;">
+      <!-- QR Pairing & LAN Discovery Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🔗 จับคู่มือถือ (QR Auto-Auth &amp; mDNS)</div>
+          <button id="btn-rotate-token" class="btn" title="สุ่มรหัส Session Token ใหม่">🔄 สุ่ม Token ใหม่</button>
+        </div>
+
+        <div class="qr-container">
+          <div id="qr-svg-holder" aria-live="polite"></div>
+          <div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px; text-align: center;">
+            สแกน QR เพื่อเชื่อมต่ออัตโนมัติ (ไม่ต้องกดยืนยัน)<br />
+            หรือเลือกเครื่องจาก mDNS แล้วกด <strong>Allow</strong> บนหน้าจอนี้
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>เครือข่าย LAN (Wi-Fi 5GHz / USB Tethering)</span>
+          </div>
+          <select id="lan-ip-select"></select>
+        </div>
+
+        <div class="control-group" style="margin-bottom: 0;">
+          <div class="control-label">
+            <span>ลิงก์สำหรับใส่ใน <strong>OBS Browser Source</strong></span>
+            <span style="color: var(--accent-emerald);">พื้นหลังโปร่งใสอัตโนมัติ</span>
+          </div>
+          <div class="code-copy-row">
+            <input id="obs-url-input" type="text" readonly value="http://127.0.0.1:8080/obs" />
+            <button id="btn-copy-obs" class="btn btn-primary">คัดลอก</button>
+          </div>
+          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px;">
+            แนะนำใน OBS: กว้าง <code>1920</code> สูง <code>1080</code> และติ๊ก <em>"Control audio via OBS"</em> (ระบบปรับจอแนวตั้ง ↔ แนวนอนให้อัตโนมัติ)
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-Time Encoder & Bitrate Controls Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🎛️ ปรับคุณภาพสตรีมแบบเรียลไทม์ (DataChannel)</div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>Video Bitrate (H.264 Hardware)</span>
+            <strong id="label-bitrate-val">8.0 Mbps (8000 kbps)</strong>
+          </div>
+          <input id="slider-bitrate" type="range" min="4000" max="15000" step="500" value="8000" />
+          <div class="preset-row">
+            <button class="btn bitrate-preset" data-kbps="4000">4 Mbps (ประหยัด)</button>
+            <button class="btn bitrate-preset active" data-kbps="8000">8 Mbps (แนะนำ)</button>
+            <button class="btn bitrate-preset" data-kbps="12000">12 Mbps (คมชัด)</button>
+            <button class="btn bitrate-preset" data-kbps="15000">15 Mbps (สูงสุด)</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label">
+            <span>เป้าหมายเฟรมเรต (Target FPS)</span>
+            <strong id="label-fps-val">60 FPS</strong>
+          </div>
+          <div class="preset-row">
+            <button class="btn fps-preset" data-fps="30">30 FPS</button>
+            <button class="btn fps-preset active" data-fps="60">60 FPS (ลื่นไหล)</button>
+          </div>
+        </div>
+
+        <div class="control-group" style="margin-bottom: 0;">
+          <div class="control-label">
+            <span>ความละเอียดภาพ (Resolution)</span>
+            <strong id="label-res-val">1080p (Full HD)</strong>
+          </div>
+          <div class="preset-row">
+            <button class="btn res-preset" data-res="720p">720p (1280x720)</button>
+            <button class="btn res-preset active" data-res="1080p">1080p (1920x1080)</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- mDNS Discovery Allow / Deny Popup Modal -->
+  <div id="approval-overlay" class="approval-overlay" role="dialog" aria-modal="true">
+    <div class="approval-modal">
+      <div class="card-title" style="font-size: 17px; color: var(--accent-primary);">
+        🛡️ คำขอเชื่อมต่อผ่าน mDNS บนเครือข่าย LAN
+      </div>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-top: 6px;">
+        พบอุปกรณ์มือถือต้องการแชร์หน้าจอเข้าเครื่อง PC ของคุณ กรุณาตรวจสอบและกดยืนยันสิทธิ์:
+      </p>
+      <div id="approval-list"></div>
+    </div>
+  </div>
+
+  <script src="/dashboard.js"></script>
+</body>
+</html>

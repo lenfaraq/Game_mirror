@@ -1,0 +1,52 @@
+name: Build iOS Sideload IPA (Free Apple ID - AltStore / Sideloadly)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'ios-sender/**'
+      - '.github/workflows/ios-sideload-build.yml'
+
+jobs:
+  build-unsigned-ipa:
+    name: Build Unsigned IPA for Free Apple ID Sideload
+    runs-on: macos-14
+    defaults:
+      run:
+        working-directory: ios-sender
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project from project.yml (2 App IDs: Main App + BroadcastExtension)
+        run: xcodegen generate
+
+      - name: Build Unsigned Release App Bundle
+        run: |
+          xcodebuild clean build \
+            -project WirelessGameMirror.xcodeproj \
+            -scheme WirelessGameMirrorApp \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package Unsigned .ipa for AltStore / Sideloadly
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/WirelessGameMirrorApp.app Payload/
+          zip -qry WirelessGameMirror-Sideload.ipa Payload
+
+      - name: Upload Sideloadable IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WirelessGameMirror-iOS-Sideload-IPA
+          path: ios-sender/WirelessGameMirror-Sideload.ipa
+          retention-days: 30

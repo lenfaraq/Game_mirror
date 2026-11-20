@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireless Game Mirror - OBS Browser Source</title>
+  <style>
+    :root {
+      --stream-width: 1920;
+      --stream-height: 1080;
+      --stream-aspect: 16 / 9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: transparent !important;
+      background-color: rgba(0, 0, 0, 0) !important;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    #obs-stage {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent !important;
+      position: relative;
+    }
+
+    #obs-video {
+      width: 100%;
+      height: 100%;
+      max-width: 100vw;
+      max-height: 100vh;
+      object-fit: contain;
+      background: transparent !important;
+      transition: aspect-ratio 120ms ease-out;
+      opacity: 0;
+    }
+
+    body[data-streaming="true"] #obs-video {
+      opacity: 1;
+    }
+
+    /* Dynamic Orientation Rules: Portrait (1080x1920) vs Landscape (1920x1080) */
+    body[data-orientation="portrait"] #obs-video {
+      aspect-ratio: 9 / 16;
+      height: 100vh;
+      width: auto;
+    }
+
+    body[data-orientation="landscape"] #obs-video {
+      aspect-ratio: 16 / 9;
+      width: 100vw;
+      height: auto;
+    }
+
+    #obs-hud {
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.85);
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      padding: 6px 12px;
+      border-radius: 999px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 250ms ease;
+    }
+
+    body[data-show-hud="true"] #obs-hud {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body data-orientation="landscape" data-streaming="false" data-show-hud="false">
+  <div id="obs-stage">
+    <video id="obs-video" autoplay playsinline></video>
+    <div id="obs-hud">รอสัญญาณภาพจากมือถือ...</div>
+  </div>
+  <script src="/obs.js"></script>
+</body>
+</html>

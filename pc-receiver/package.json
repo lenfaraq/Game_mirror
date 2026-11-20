@@ -1,0 +1,13 @@
+{
+  "name": "wireless-game-mirror-pc-receiver",
+  "version": "1.0.0",
+  "description": "PC Receiver, Local WebRTC Signaling Server, mDNS Advertiser & OBS Browser Source for Wireless Game Mirror (iOS & Android)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
