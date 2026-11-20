@@ -92,7 +92,7 @@ describe('4. iOS Sender (Split-Process ReplayKit < 50MB RAM + VideoToolbox + Fre
       path.join(repoRoot, '.github', 'workflows', 'ios-sideload-build.yml'),
       'utf8'
     );
-    assert.ok(workflow.includes('macos-14'));
+    assert.ok(workflow.includes('macos-latest'));
     assert.ok(workflow.includes('xcodegen generate'));
     assert.ok(workflow.includes('WirelessGameMirror-Sideload.ipa'));
   });
