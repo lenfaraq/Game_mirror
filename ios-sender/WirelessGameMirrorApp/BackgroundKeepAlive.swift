@@ -54,13 +54,13 @@ public final class BackgroundKeepAliveManager {
         header.append("WAVE".data(using: .ascii)!)
         header.append("fmt ".data(using: .ascii)!)
 
-        var subchunk1Size: UInt32 = 16.littleEndian
-        var audioFormat: UInt16 = 1.littleEndian // PCM
-        var numChannels: UInt16 = 1.littleEndian
+        var subchunk1Size: UInt32 = UInt32(16).littleEndian
+        var audioFormat: UInt16 = UInt16(1).littleEndian // PCM
+        var numChannels: UInt16 = UInt16(1).littleEndian
         var srLE = sampleRate.littleEndian
         var byteRate = (sampleRate * 2).littleEndian
-        var blockAlign: UInt16 = 2.littleEndian
-        var bitsPerSample: UInt16 = 16.littleEndian
+        var blockAlign: UInt16 = UInt16(2).littleEndian
+        var bitsPerSample: UInt16 = UInt16(16).littleEndian
 
         withUnsafeBytes(of: &subchunk1Size) { header.append(contentsOf: $0) }
         withUnsafeBytes(of: &audioFormat) { header.append(contentsOf: $0) }
